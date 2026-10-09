@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GymTracker — Follow one workout</title><style>
+:root{color-scheme:light;--ink:#17291e;--muted:#55645b;--green:#176e42;--line:#dce5df;--surface:#fff;--bg:#f3f6f3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--green);text-underline-offset:3px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid #dd9334;outline-offset:3px}header,main,footer{max-width:1260px;margin:auto;padding:28px}
+header{padding-bottom:14px}.brand{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:650;letter-spacing:.05em}
+.badge{border:1px solid var(--line);border-radius:40px;padding:5px 12px;background:white;letter-spacing:0;color:var(--muted)}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.1;letter-spacing:-.035em;margin:30px 0 12px}h2{font-size:24px;line-height:1.2;margin:10px 0 16px}h3{font-size:17px;margin:0 0 12px}
+p{margin:0 0 14px}.lead{max-width:780px;color:var(--muted);font-size:18px}.small{font-size:13px;color:var(--muted)}.layers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 8px}
+.layer{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;border-top:4px solid var(--green)}.layer.domain{border-top-color:#7960a2}.layer.data{border-top-color:#c48326}
+.layer strong{display:block}.layer p{font-size:14px;color:var(--muted);margin:6px 0 0}
+.workspace{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px}aside{align-self:start;position:sticky;top:16px}.step-nav{display:grid;gap:7px}
+.step-nav button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid transparent;border-radius:12px;padding:12px;background:transparent;color:var(--muted)}
+.step-nav button.active{background:#e0f1e5;border-color:#bfdcc7;color:var(--ink);font-weight:650}.step-nav span{background:white;border-radius:50%;height:26px;width:26px;display:grid;place-items:center;font-size:12px;flex-shrink:0}
+progress{width:100%;height:6px;accent-color:var(--green);margin:12px 0 4px}.content{min-width:0}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px}
+.card-heading{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}.pill{display:inline-block;border-radius:24px;background:#eaf0ed;color:var(--green);padding:4px 10px;font-size:12px;font-weight:650}
+.form-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) minmax(0,1fr);gap:12px}.name-field{grid-column:1/-1}label{display:block;font-size:13px;color:var(--muted)}
+input[type=text],select{display:block;width:100%;border:1px solid #c8d4cc;border-radius:10px;background:#fafcfb;color:var(--ink);padding:11px 12px;margin-top:5px}
+.options{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0}.options label{display:flex;gap:7px;align-items:center;color:var(--ink)}input[type=checkbox]{accent-color:var(--green)}
+.examples{display:flex;gap:8px;flex-wrap:wrap}.examples button,.secondary{border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);padding:7px 11px;font-size:13px}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.metric{background:#f2f6f3;padding:12px;border-radius:12px}.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{font-size:17px}
+.notice{border-left:3px solid var(--green);background:#edf6ef;padding:12px 14px;border-radius:0 10px 10px 0;font-size:14px}.notice.warning{border-color:#ba7425;background:#fff5e8}
+.panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.panels .card{min-width:0}pre{margin:0;background:#14271c;color:#e7f4eb;border-radius:12px;padding:16px;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;overflow:auto;max-height:430px;tab-size:4}
+.file-link{display:block;word-break:break-word;font-size:12px;margin-bottom:10px}.debug{font-size:14px;color:var(--muted);margin:16px 0 0}
+.actions{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:18px 0}.action-right{display:flex;gap:8px;flex-wrap:wrap}.primary{border:0;border-radius:10px;background:var(--green);color:white;padding:11px 18px;font-weight:650}
+.preview{border:1px solid var(--line);background:#f7faf7;border-radius:12px;padding:16px;margin-top:16px}.preview strong{display:block}.preview-set{display:flex;justify-content:space-between;gap:12px;margin-top:8px}
+.files{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.files article{background:#f6f8f6;border-radius:12px;padding:16px}.files p{font-size:14px;color:var(--muted);margin-bottom:6px}.files code{font-size:12px;word-break:break-word}
+footer{padding-top:0;font-size:13px;color:var(--muted)}[hidden]{display:none!important}
+@media(max-width:850px){header,main,footer{padding:20px}.workspace{grid-template-columns:1fr}aside{position:static}.step-nav{grid-template-columns:repeat(2,1fr)}.step-nav button{padding:8px}.panels{grid-template-columns:1fr}.layers{gap:8px}.layer{padding:12px}.metric-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.layers,.files{grid-template-columns:1fr}.form-grid{grid-template-columns:2fr 1fr}.reps-field{grid-column:1/-1}.card{padding:16px}.actions{align-items:start}.action-right{justify-content:flex-end}}
+@media(prefers-reduced-motion:no-preference){button{transition:background .15s ease,border-color .15s ease}}
+</style></head>
+<body>
+<header>
+  <div class="brand"><span>GYMTRACKER / CODEBASE TOUR</span><span class="badge">Kotlin · Compose · Room</span></div>
+  <h1>Follow one workout.</h1>
+  <p class="lead">Enter a Bench Press set, then step through the code that turns it into saved history and progress. Every step points to the real Kotlin source.</p>
+  <p class="small">This is an offline browser simulation with snapshots at each step. It has no connection to your app data. The companion Kotlin demo runs the actual domain code.</p>
+  <div class="layers" aria-label="Three architecture layers">
+    <div class="layer"><strong>Presentation</strong><p>Compose draws screens.<br>ViewModel owns UI state and user actions.</p></div>
+    <div class="layer domain"><strong>Domain</strong><p>Models, validation and calculations.<br>Repository interfaces describe storage needs.</p></div>
+    <div class="layer data"><strong>Data</strong><p>Room stores workouts.<br>DataStore stores preferences.<br>Adapters implement domain interfaces.</p></div>
+  </div>
+  <p class="small">Dependencies: presentation → domain ← data. Application and Activity wire the concrete implementations together.</p>
+</header>
+<main>
+ <div class="workspace">
+  <aside aria-label="Walkthrough steps">
+   <p id="step-count" class="small">Step 1 of 7</p>
+   <progress id="progress" max="7" value="1" aria-label="Walkthrough progress"></progress>
+   <nav class="step-nav" aria-label="Select a step"><button type="button" data-step="0"><span>1</span>Type a set</button><button type="button" data-step="1"><span>2</span>Update the draft</button><button type="button" data-step="2"><span>3</span>Finish and confirm</button><button type="button" data-step="3"><span>4</span>Build the saved model</button><button type="button" data-step="4"><span>5</span>Write a transaction</button><button type="button" data-step="5"><span>6</span>Observe and redraw</button><button type="button" data-step="6"><span>7</span>Calculate progress</button></nav>
+   <p class="small" style="margin-top:18px">Start with 185 lb × 8. Then try kilograms, incomplete input, and a save failure.</p>
+  </aside>
+  <div class="content">
+   <section class="card" aria-labelledby="example-title">
+    <div class="card-heading"><h3 id="example-title">Your example set</h3><button type="button" id="reset" class="secondary">Reset</button></div>
+    <div class="form-grid">
+     <label class="name-field">Workout name<input id="name" type="text" value="Demo workout"></label>
+     <label>Weight<input id="weight" type="text" inputmode="decimal" value="185" spellcheck="false" autocomplete="off"></label>
+     <label>Entry unit<select id="unit"><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label>
+     <label class="reps-field">Reps<input id="reps" type="text" inputmode="numeric" value="8" spellcheck="false" autocomplete="off"></label>
+    </div>
+    <div class="options">
+     <label><input id="partial" type="checkbox">Add an incomplete second row</label>
+     <label><input id="failure" type="checkbox">Simulate a storage error</label>
+    </div>
+    <div class="examples" aria-label="Example scenarios">
+     <button type="button" data-example="normal">185 lb × 8</button>
+     <button type="button" data-example="kg">100 kg × 8</button>
+     <button type="button" data-example="invalid">Invalid reps</button>
+     <button type="button" data-example="partial">Incomplete extra row</button>
+     <button type="button" data-example="failure">Save failure</button>
+    </div>
+    <p class="small" style="margin:12px 0 0">Changing the entry unit converts numeric text to preserve pounds. Editing inputs restarts the walkthrough.</p>
+    <div class="preview" aria-label="Illustrative app preview">
+     <span id="screen" class="pill">Workout draft</span><strong id="preview-name">Demo workout</strong>
+     <div class="preview-set"><span>Bench Press</span><span><span id="weight-preview">185 lb</span> × <span id="reps-preview">8</span></span></div>
+    </div>
+   </section>
+   <section class="card" aria-labelledby="step-title">
+    <span id="layer" class="pill"></span><h2 id="step-title" tabindex="-1"></h2>
+    <p id="description"></p>
+    <div class="metric-grid">
+     <div class="metric"><span>Valid sets</span><strong id="valid-count"></strong></div>
+     <div class="metric"><span>Incomplete sets</span><strong id="invalid-count"></strong></div>
+     <div class="metric"><span>Canonical weight</span><strong id="pounds"></strong></div>
+     <div class="metric"><span>Stored set rows at this step</span><strong id="rows"></strong></div>
+    </div>
+    <div id="status" class="notice" role="status" aria-live="polite"></div>
+    <p id="debugging" class="debug"></p>
+    <div class="actions"><button type="button" id="back" class="secondary">← Back</button>
+      <div class="action-right"><button type="button" id="keep-editing" class="secondary" hidden>Keep Editing</button><button type="button" id="next" class="primary">Next step →</button></div></div>
+   </section>
+   <div class="panels">
+    <section class="card" aria-labelledby="source-title"><h3 id="source-title">Actual Kotlin source</h3><a id="file-link" class="file-link" target="_blank" rel="noopener noreferrer"></a><pre><code id="source-code"></code></pre><p class="small" style="margin-top:10px">Source excerpts are pinned to the Android baseline at 44572a6.</p></section>
+    <section class="card" aria-labelledby="snapshot-title"><h3 id="snapshot-title">State snapshot (illustrative)</h3><pre><code id="snapshot"></code></pre><p class="small" style="margin-top:10px">The browser model mirrors the common examples; the Kotlin demo verifies the real domain behavior.</p></section>
+   </div>
+   <section class="card">
+    <h3>Where these numbers come from</h3>
+    <div class="metric-grid" style="grid-template-columns:repeat(2,1fr)">
+     <div class="metric"><span>Volume: weight × reps</span><strong id="volume"></strong></div>
+     <div class="metric"><span>Epley estimated 1RM: weight × (1 + reps / 30)</span><strong id="one-rm"></strong></div>
+    </div>
+    <p class="small">These are calculations for the entered valid set. The app's Progress screen reads saved sets; the table-row count above shows when this example reaches storage.</p>
+   </section>
+  </div>
+ </div>
+ <section class="card" aria-labelledby="change-title">
+  <h2 id="change-title">Where to make a change</h2>
+  <div class="files"><article><h3>Change a screen</h3><p>Compose functions receive state and callbacks; previews use pure sample fixtures.</p><a href="https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/develop/app/src/main/java/com/gymtracker/android/presentation/composables/screens/WorkoutScreen.kt" target="_blank" rel="noopener noreferrer"><code>presentation/composables/screens/WorkoutScreen.kt</code></a></article><article><h3>Change validation or weight units</h3><p>DraftSet parses input, records its entry unit and exposes isValid. Persisted weight is always pounds.</p><a href="https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/develop/app/src/main/java/com/gymtracker/android/domain/model/Models.kt" target="_blank" rel="noopener noreferrer"><code>domain/model/Models.kt</code></a></article><article><h3>Change saving and ordering</h3><p>WorkoutService builds valid models. The ViewModel coordinates domain work and storage.</p><a href="https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/develop/app/src/main/java/com/gymtracker/android/domain/service/WorkoutService.kt" target="_blank" rel="noopener noreferrer"><code>domain/service/WorkoutService.kt</code></a></article><article><h3>Change storage</h3><p>Room entities, foreign keys and DAO queries live in the data layer. Evolve the schema with a migration.</p><a href="https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/develop/app/src/main/java/com/gymtracker/android/data/local/TrackerDatabase.kt" target="_blank" rel="noopener noreferrer"><code>data/local/TrackerDatabase.kt</code></a></article><article><h3>Change strength calculations</h3><p>Per-workout performance, record comparison and local-day streak live in ProgressCalculator.</p><a href="https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/develop/app/src/main/java/com/gymtracker/android/domain/service/ProgressCalculator.kt" target="_blank" rel="noopener noreferrer"><code>domain/service/ProgressCalculator.kt</code></a></article><article><h3>Change preferences</h3><p>The Settings model is in domain; DataStoreSettingsRepository persists changes and emits a Flow.</p><a href="https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/develop/app/src/main/java/com/gymtracker/android/data/repository/DataStoreSettingsRepository.kt" target="_blank" rel="noopener noreferrer"><code>data/repository/DataStoreSettingsRepository.kt</code></a></article></div>
+ </section>
+ <section class="card">
+  <h2>Run the real Kotlin demonstration</h2>
+  <p>Open the repository in Android Studio, then run this command from its root. JDK 17 and Android SDK 35 are required; no emulator is needed for this domain demo.</p>
+  <pre><code>./gradlew testDebugUnitTest --tests 'com.gymtracker.android.demo.CodebaseDemoTest' --info --rerun-tasks</code></pre>
+  <p class="small" style="margin-top:12px">The test prints each checkpoint and calls WorkoutService, DraftSet, ProgressCalculator and CsvExporter. Room persistence and Compose input are covered by the existing device tests.</p>
+ </section>
+</main>
+<footer>Open this single file locally; no server or external assets are required. Source links open GitHub. See docs/CODEBASE_DEMO.md for the startup flow, debugger stops, previews and device-test commands.</footer>
+<noscript><p style="padding:24px">Enable JavaScript for the interactive steps. The Markdown guide is available in docs/CODEBASE_DEMO.md.</p></noscript>
+<script id="demo-model">const DemoCore = (() => {
+  const factor = { lb: 1, kg: 2.20462 };
+  function weight(text) {
+    const raw = String(text).trim().replace(",", ".");
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw)) return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  }
+  function reps(text) {
+    const raw = String(text).trim();
+    if (!/^[+-]?\d+$/.test(raw)) return null;
+    const value = Number(raw);
+    return Number.isInteger(value) && value >= -2147483648 && value <= 2147483647 ? value : null;
+  }
+  function analyse(input) {
+    const entered = weight(input.weight);
+    const count = reps(input.reps);
+    const weightLb = entered === null ? null : entered * factor[input.unit];
+    const valid = weightLb !== null && Number.isFinite(weightLb) && weightLb > 0 && count !== null && count > 0;
+    return {
+      weightLb, reps: count, valid, validSetCount: valid ? 1 : 0,
+      invalidSetCount: (valid ? 0 : 1) + (input.partial ? 1 : 0),
+      volume: valid ? weightLb * count : null,
+      estimatedOneRepMax: valid ? weightLb * (1 + count / 30) : null
+    };
+  }
+  function build(input) {
+    const result = analyse(input);
+    if (!result.valid) throw new Error("Enter at least one valid set.");
+    return {
+      id: "demo-workout", name: input.name.trim() || "Workout",
+      date: "2026-10-09T12:00:00Z", notes: "", sets: [{
+        id: "demo-set-1", exerciseId: "preset-0",
+        weightLb: result.weightLb, reps: result.reps, setNumber: 1, sortOrder: 0
+      }]
+    };
+  }
+  function convert(text, from, to) {
+    const value = weight(text);
+    if (value === null && String(text).trim()) return { text, unit: from };
+    return { text: value === null ? "" : String(value * factor[from] / factor[to]), unit: to };
+  }
+  function snapshot(input, stage) {
+    const result = analyse(input);
+    const model = result.valid && stage >= 3 ? build(input) : null;
+    const written = model !== null && stage >= 4 && !input.failure;
+    const draft = {
+      name: input.name, exercises: [{ exerciseId: "preset-0", sets: [
+        { id: "demo-set-1", weightText: input.weight, repsText: input.reps, entryUnit: input.unit.toUpperCase() },
+        ...(input.partial ? [{ id: "incomplete", weightText: "", repsText: "8", entryUnit: input.unit.toUpperCase() }] : [])
+      ] }]
+    };
+    return {
+      draft, model, written,
+      workouts: written ? [{ id: model.id, name: model.name, dateMillis: Date.parse(model.date), notes: "" }] : [],
+      workoutSets: written ? model.sets.map(set => ({ ...set, workoutId: model.id })) : [],
+      ui: { busy: false, error: stage >= 4 && input.failure ? "Couldn't save. Please try again." : null,
+        completed: written && stage >= 5 ? model.id : null,
+        session: written && stage >= 5 ? { name: "Workout", exercises: [] } : draft,
+        data: { workoutCount: written && stage >= 5 ? 1 : 0 } },
+      result
+    };
+  }
+  return Object.freeze({ analyse, build, convert, snapshot, factor });
+})();</script>
+<script>const STEPS = [{"title":"Type a set","layer":"Presentation · Compose","summary":"SetRow keeps editable text on screen. Its onChange callback is wired through WorkoutActions to the ViewModel.","watch":"Put a breakpoint in editSet(). Each weight or reps change sends the exercise ID, set ID and both text fields.","file":"presentation/composables/components/CommonComponents.kt","line":46,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/presentation/composables/components/CommonComponents.kt#L46","code":"fun SetRow(\n    number: Int, set: DraftSet, locked: Boolean,\n    onChange: (String, String) -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier\n) {\n    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {\n        Text(\"$number\", modifier = Modifier.padding(top = 20.dp), style = MaterialTheme.typography.labelLarge)\n        OutlinedTextField(\n            value = set.weightText, onValueChange = { onChange(it, set.repsText) },\n            label = { Text(\"Weight (${set.entryUnit.label})\") }, enabled = !locked,\n            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),\n            singleLine = true, modifier = Modifier.weight(1f)\n        )\n        OutlinedTextField(\n            value = set.repsText, onValueChange = { onChange(set.weightText, it) },\n            label = { Text(\"Reps\") }, enabled = !locked,\n            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),\n            singleLine = true, modifier = Modifier.weight(0.7f)\n        )\n        TextButton(onClick = onRemove, enabled = !locked, contentPadding = PaddingValues(4.dp)) { Text(\"×\") }"},{"title":"Update the draft","layer":"Presentation · ViewModel","summary":"editSet() copies the changed row into an immutable WorkoutSession, then StateFlow publishes a new TrackerUiState. The draft holds text and its entry unit.","watch":"Inspect state.value.session. A copy changes observable state; the composable renders the new value.","file":"presentation/TrackerViewModel.kt","line":71,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/presentation/TrackerViewModel.kt#L71","code":"    fun editSet(exerciseId: String, setId: String, weight: String, reps: String) = changeExercise(exerciseId) {\n        if (it.isComplete) it else it.copy(sets = it.sets.map { set ->\n            if (set.id == setId) set.copy(weightText = weight, repsText = reps) else set\n        })\n    }"},{"title":"Finish and confirm","layer":"Presentation → domain rules","summary":"finish() checks validSetCount. When a valid set and an incomplete row are present, confirmDiscard opens a confirmation before saving.","watch":"No valid set: Finish is disabled. A partial extra row: Discard & Save proceeds with the valid set.","file":"presentation/TrackerViewModel.kt","line":79,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/presentation/TrackerViewModel.kt#L79","code":"    fun finish() {\n        if (state.value.busy || state.value.session.validSetCount == 0) return\n        if (state.value.session.invalidSetCount > 0 && state.value.settings.confirmDiscard)\n            mutableState.update { it.copy(confirmFinish = true) }\n        else save()\n    }\n    fun dismissFinish() { mutableState.update { it.copy(confirmFinish = false) } }\n    fun save() {"},{"title":"Build the saved model","layer":"Domain","summary":"WorkoutService.build() filters invalid rows, converts valid weights to canonical pounds, numbers sets, preserves order, and cleans the name and notes.","watch":"Step through DraftSet.weightLb and isValid, then inspect the returned Workout. The ViewModel passes this object to the repository interface.","file":"domain/service/WorkoutService.kt","line":8,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/domain/service/WorkoutService.kt#L8","code":"    fun build(session: WorkoutSession): Workout {\n        require(session.validSetCount > 0) { \"Enter at least one valid set.\" }\n        var order = 0\n        val sets = session.exercises.flatMap { draft ->\n            draft.sets.filter { it.isValid }.mapIndexed { index, set ->\n                WorkoutSet(\n                    id = set.id, exerciseId = draft.exercise.id,\n                    weightLb = requireNotNull(set.weightLb), reps = requireNotNull(set.reps),\n                    setNumber = index + 1, sortOrder = order++\n                )\n            }\n        }\n        return Workout(\n            id = session.editingId ?: UUID.randomUUID().toString(),\n            name = session.name.trim().ifBlank { \"Workout\" }, date = session.date,\n            notes = session.notes.trim(), sets = sets\n        )"},{"title":"Write a transaction","layer":"Data · Room (simulated here)","summary":"In Android, RoomTrackerRepository.saveWorkout() writes the workout and its full set list inside one Room transaction. This browser shows illustrative table rows.","watch":"On a storage exception, the transaction rolls back and the ViewModel action() publishes an error while keeping the draft.","file":"data/repository/RoomTrackerRepository.kt","line":31,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/data/repository/RoomTrackerRepository.kt#L31","code":"    override suspend fun saveWorkout(workout: Workout) = database.withTransaction {\n        require(workout.sets.isNotEmpty()) { \"A workout needs at least one valid set.\" }\n        require(workout.sets.all { it.weightLb.isFinite() && it.weightLb > 0 && it.reps > 0 })\n        dao.saveWorkout(WorkoutEntity(workout.id, workout.name, workout.date.toEpochMilli(), workout.notes, workout.durationSeconds))\n        dao.clearSets(workout.id)\n        dao.saveSets(workout.sets.map {\n            SetEntity(it.id, workout.id, it.exerciseId, it.weightLb, it.reps, it.setNumber, it.sortOrder)\n        })\n    }"},{"title":"Observe and redraw","layer":"Data → presentation","summary":"Room query Flows emit after invalidation. The repository maps entities to TrackerData, and the ViewModel collector updates UI data. The save action separately resets the draft and sets completed.","watch":"Observe the collector and save() separately: Flow refresh and completion state are asynchronous, rather than one synchronous call chain.","file":"presentation/TrackerViewModel.kt","line":36,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/presentation/TrackerViewModel.kt#L36","code":"                combine(repository.data, preferences.settings) { data, settings -> data to settings }\n                    .collect { (data, settings) ->\n                        mutableState.update { old ->\n                            val session = old.session.copy(exercises = old.session.exercises.map { draft ->\n                                draft.copy(sets = draft.sets.map { it.inUnit(settings.unit) })\n                            })\n                            old.copy(data = data, settings = settings, session = session, loading = false)\n                        }\n                    }\n            } catch (e: CancellationException) { throw e }"},{"title":"Calculate progress","layer":"Domain → presentation","summary":"Saved sets supply volume and Epley estimated 1RM. Home and Progress render the results. Progress history chooses one strongest estimated-1RM set per workout.","watch":"185 lb × 8 produces 1,480 lb of volume and an estimated 1RM of 234.33 lb. The UI displays these in the selected weight unit.","file":"domain/model/Models.kt","line":34,"url":"https://github.com/KHALIL-P-JACKSON/Gym-app-andriod/blob/44572a6b4f280c707f7a33276ee83743938fff69/app/src/main/java/com/gymtracker/android/domain/model/Models.kt#L34","code":"    val volume get() = weightLb * reps\n    val estimatedOneRepMax get() = weightLb * (1.0 + reps / 30.0)\n}"}];
+(() => {
+  "use strict";
+  const byId = id => document.getElementById(id);
+  const controls = { name: byId("name"), weight: byId("weight"), reps: byId("reps"), unit: byId("unit"), partial: byId("partial"), failure: byId("failure") };
+  let stage = 0;
+  let entryUnit = "lb";
+  function input() {
+    return { name: controls.name.value, weight: controls.weight.value, reps: controls.reps.value,
+      unit: controls.unit.value, partial: controls.partial.checked, failure: controls.failure.checked };
+  }
+  const format = value => value === null || !Number.isFinite(value) ? "—" :
+    new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+  function json(id, value) { byId(id).textContent = JSON.stringify(value, null, 2); }
+  function navigate(next) {
+    const data = input();
+    if (next > 2 && !DemoCore.analyse(data).valid) next = 2;
+    if (next > 4 && data.failure) next = 4;
+    stage = Math.max(0, Math.min(STEPS.length - 1, next));
+    render();
+  }
+  function render() {
+    const data = input();
+    const view = DemoCore.snapshot(data, stage);
+    const detail = STEPS[stage];
+    byId("step-title").textContent = (stage + 1) + ". " + detail.title;
+    byId("layer").textContent = detail.layer;
+    byId("description").textContent = detail.summary;
+    byId("debugging").textContent = detail.watch;
+    byId("file-link").textContent = detail.file + ":" + detail.line;
+    byId("file-link").href = detail.url;
+    byId("source-code").textContent = detail.code;
+    byId("step-count").textContent = "Step " + (stage + 1) + " of " + STEPS.length;
+    byId("progress").value = stage + 1;
+    byId("valid-count").textContent = String(view.result.validSetCount);
+    byId("invalid-count").textContent = String(view.result.invalidSetCount);
+    byId("pounds").textContent = format(view.result.weightLb) + " lb";
+    byId("rows").textContent = String(view.workoutSets.length);
+    byId("volume").textContent = format(view.result.volume) + " lb";
+    byId("one-rm").textContent = format(view.result.estimatedOneRepMax) + " lb";
+    byId("screen").textContent = view.written && stage >= 5 ? "Saved workout → History / Progress" : "Workout draft";
+    byId("reps-preview").textContent = controls.reps.value.trim() || "—";
+    byId("weight-preview").textContent = (controls.weight.value.trim() || "—") + " " + data.unit;
+    byId("preview-name").textContent = controls.name.value.trim() || "Workout";
+    json("snapshot", stage <= 2 ? { session: view.draft, validSetCount: view.result.validSetCount, invalidSetCount: view.result.invalidSetCount } :
+      stage === 3 ? view.model : stage === 4 ? { workouts: view.workouts, workout_sets: view.workoutSets, error: view.ui.error } :
+      stage === 5 ? view.ui : { volumeLb: view.result.volume, estimatedOneRepMaxLb: view.result.estimatedOneRepMax,
+        displayedKg: { volume: view.result.volume === null ? null : view.result.volume / DemoCore.factor.kg,
+          estimatedOneRepMax: view.result.estimatedOneRepMax === null ? null : view.result.estimatedOneRepMax / DemoCore.factor.kg } });
+    let message = "Typing changes the in-memory draft. Follow the steps to see when persistence happens.";
+    let tone = "";
+    if (!view.result.valid) { message = "This set is invalid. Weight must be positive and finite; reps must be a positive whole number. Finish cannot proceed."; tone = "warning"; }
+    else if (stage === 2 && data.partial) { message = "One valid set + one incomplete row. Discard & Save confirms that only the valid set will be kept."; tone = "warning"; }
+    else if (stage === 3) message = "A valid Workout has been built. The example has not reached the simulated database write yet.";
+    else if (stage >= 4 && data.failure) { message = "Save failed: no rows committed, the draft stays editable, and the ViewModel exposes an error. Retry below."; tone = "warning"; }
+    else if (stage === 4) message = "The simulated transaction committed one workout and one set in canonical pounds.";
+    else if (stage === 5) message = "Room's query Flow refreshes UI data. save() separately resets the draft and publishes the completion summary.";
+    else if (stage === 6) message = "Progress is calculated from saved sets. Estimated 1RM is an Epley estimate, not a tested maximum.";
+    byId("status").textContent = message;
+    byId("status").className = "notice " + tone;
+    byId("back").disabled = stage === 0;
+    byId("next").disabled = stage === 2 && !view.result.valid;
+    byId("next").textContent = stage === 6 ? "Reset example" :
+      stage === 4 && data.failure ? "Retry simulated save" :
+      stage === 2 && data.partial && view.result.valid ? "Discard & Save" : "Next step →";
+    byId("keep-editing").hidden = !(stage === 2 && data.partial && view.result.valid);
+    document.querySelectorAll("[data-step]").forEach(button => {
+      const active = Number(button.dataset.step) === stage;
+      button.setAttribute("aria-current", active ? "step" : "false");
+      button.classList.toggle("active", active);
+    });
+  }
+  function example(which) {
+    controls.name.value = "Demo workout";
+    controls.partial.checked = which === "partial";
+    controls.failure.checked = which === "failure";
+    controls.weight.value = which === "kg" ? "100" : "185";
+    controls.reps.value = which === "invalid" ? "" : "8";
+    controls.unit.value = which === "kg" ? "kg" : "lb";
+    entryUnit = controls.unit.value;
+    stage = 0; render();
+  }
+  Object.entries(controls).forEach(([name, control]) => {
+    control.addEventListener(name === "unit" || name === "partial" || name === "failure" ? "change" : "input", () => {
+      if (name === "unit") {
+        const converted = DemoCore.convert(controls.weight.value, entryUnit, control.value);
+        controls.weight.value = converted.text;
+        controls.unit.value = converted.unit;
+        entryUnit = converted.unit;
+      }
+      stage = 0; render();
+    });
+  });
+  document.querySelectorAll("[data-example]").forEach(button => button.addEventListener("click", () => example(button.dataset.example)));
+  document.querySelectorAll("[data-step]").forEach(button => button.addEventListener("click", () => {
+    const target = Number(button.dataset.step);
+    // Route a jump past confirmation through the same acknowledgment used by Next.
+    if (target > 2 && input().partial && stage < 3) navigate(2); else navigate(target);
+  }));
+  byId("next").addEventListener("click", () => {
+    if (stage === 6) { example("normal"); return; }
+    if (stage === 4 && input().failure) { controls.failure.checked = false; render(); return; }
+    navigate(stage + 1);
+  });
+  byId("back").addEventListener("click", () => navigate(stage - 1));
+  byId("reset").addEventListener("click", () => example("normal"));
+  byId("keep-editing").addEventListener("click", () => navigate(0));
+  render();
+})();</script>
+</body></html>

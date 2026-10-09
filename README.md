@@ -4,6 +4,12 @@ Native, single-user, offline workout tracker built with Kotlin, Jetpack Compose,
 Android port of [Gym-App](https://github.com/KHALIL-P-JACKSON/Gym-App), based on its master commit
 `6f1a03cfb22133d1ce343ebc2a3c95af30358d5e`.
 
+## Learn the codebase
+
+Open the [guided demonstration](docs/CODEBASE_DEMO.md) to trace a workout through Compose, the ViewModel, domain rules and Room.
+For an interactive walkthrough, download [codebase-demo.html](docs/codebase-demo.html) and open it in a browser. It runs offline.
+The guide also includes a runnable Kotlin example using the actual domain services.
+
 ## Run
 1. Open this repository in Android Studio Meerkat or newer.
 2. Use JDK 17; install Android SDK 35.
