@@ -40,7 +40,7 @@ The source develop branch was older. Master includes Settings, CSV export and hi
 CI is the executable validation environment for this port. It runs domain tests, Android lint, APK compilation,
 a disk-based Room lifecycle test and a Compose workout flow on API 35.
 Preview functions exist for screens and reusable components; visual comparison with the iOS app remains a manual device task.
-Generated Room schemas are included in CI's android-build-reports artifact; commit the version-1 schema before a database migration.
+The generated version-1 Room schema is committed and included in CI's android-build-reports artifact. Add a migration and retain previous schema versions when changing the database.
 
 ## Release setup
 The release workflow produces unsigned APKs. Signing secrets and Play Console credentials are intentionally not fabricated.

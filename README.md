@@ -53,7 +53,7 @@ One Gradle app module and manual constructor injection keep debugging simple. Al
 
 Room transactions replace edited set lists atomically. Deleting a workout cascades to its sets.
 Exercise foreign keys prevent removal of referenced history. Delete-all removes workouts before custom exercises and restores all default plans.
-The database starts at version 1. Room writes schemas to `app/schemas`; CI uploads them with reports. Commit the generated schema and add an explicit migration before changing stored fields.
+The database starts at version 1. The generated version-1 schema is committed in `app/schemas`; CI also uploads schemas with reports. Add an explicit migration and commit the new generated schema before changing stored fields.
 
 ## Branches and automation
 - `master`: Android baseline.
