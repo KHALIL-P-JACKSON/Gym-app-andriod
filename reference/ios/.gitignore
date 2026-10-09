@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+
+# Xcode user-specific data
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+DerivedData/
+
+# Build products
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.bcsymbolmap
+build.log
+
+# Swift Package Manager (if packages are added later)
+.swiftpm/
+.build/
+Package.resolved
+
+# CocoaPods (not used, but harmless to ignore)
+Pods/
+
+# Test / coverage artifacts
+xcresult/
+*.profraw
+
+# Signing and secrets
+*.mobileprovision
+*.p12
+*.cer
+
+# IDE editor files
+*.xcworkspace/xcuserdata/
+.vscode/
+.idea/
