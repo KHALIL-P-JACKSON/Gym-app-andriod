@@ -64,3 +64,7 @@ fun CustomExerciseDialog(onDismiss: () -> Unit, onSave: (String, MuscleGroup) ->
 @Preview(showBackground = true)
 @Composable
 private fun ExercisePickerPreview() { GymTrackerTheme { Column { ExercisePicker(PreviewData.data.exercises, emptySet(), {}, { _, _ -> }) } } }
+
+@Preview(showBackground = true, name = "Custom exercise")
+@Composable
+private fun CustomExerciseDialogPreview() { GymTrackerTheme { CustomExerciseDialog({}, { _, _ -> }) } }

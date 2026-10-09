@@ -3,6 +3,9 @@ package com.gymtracker.android.presentation.composables.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.graphics.Color
 import com.gymtracker.android.domain.model.Appearance
 
@@ -23,6 +26,18 @@ fun GymTrackerTheme(appearance: Appearance = Appearance.SYSTEM, content: @Compos
         Appearance.SYSTEM -> isSystemInDarkTheme()
         Appearance.DARK -> true
         Appearance.LIGHT -> false
+    }
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? android.app.Activity)?.window
+            if (window != null) {
+                WindowCompat.getInsetsController(window, view).apply {
+                    isAppearanceLightStatusBars = !dark
+                    isAppearanceLightNavigationBars = !dark
+                }
+            }
+        }
     }
     MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, content = content)
 }

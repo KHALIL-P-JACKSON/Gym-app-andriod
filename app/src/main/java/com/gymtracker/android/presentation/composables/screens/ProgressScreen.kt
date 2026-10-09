@@ -64,3 +64,7 @@ fun ExerciseSelectionDialog(exercises: List<Exercise>, onDismiss: () -> Unit, on
 @Preview(showBackground = true, heightDp = 950)
 @Composable
 private fun ProgressScreenPreview() { GymTrackerTheme { ProgressScreen(PreviewData.data, WeightUnit.LB) } }
+
+@Preview(showBackground = true, name = "Exercise selection")
+@Composable
+private fun ExerciseSelectionDialogPreview() { GymTrackerTheme { ExerciseSelectionDialog(PreviewData.data.exercises, {}, {}) } }
