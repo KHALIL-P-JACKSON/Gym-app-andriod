@@ -42,6 +42,7 @@ class RoomTrackerRepository(private val database: TrackerDatabase) : TrackerRepo
     override suspend fun savePlan(plan: WorkoutPlan) = dao.savePlan(plan.entity())
     override suspend fun deletePlan(id: String) = dao.deletePlan(id)
     override suspend fun deleteAllData() = database.withTransaction {
+        database.runDao().clear()
         dao.clearWorkouts()
         dao.clearPlans()
         dao.clearCustomExercises()

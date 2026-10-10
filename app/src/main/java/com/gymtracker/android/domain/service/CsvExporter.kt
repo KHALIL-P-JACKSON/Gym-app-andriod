@@ -3,6 +3,16 @@ package com.gymtracker.android.domain.service
 import com.gymtracker.android.domain.model.*
 
 object CsvExporter {
+    fun exportRuns(runs: List<RunRecord>): String {
+        val header = "start,end,duration_seconds,distance_meters,average_pace_seconds_per_unit,unit,goal_meters,recording_gaps"
+        val rows = runs.filter { it.endedAt != null }.sortedByDescending { it.startedAt }.map { run ->
+            listOf(java.time.Instant.ofEpochMilli(run.startedAt).toString(),
+                java.time.Instant.ofEpochMilli(run.endedAt!!).toString(), (run.elapsedMillis / 1000.0).toString(),
+                run.distanceMeters.toString(), if (run.distanceMeters > 0) (run.elapsedMillis / 1000.0 * run.unit.meters / run.distanceMeters).toString() else "",
+                run.unit.label, run.goalMeters?.toString() ?: "", run.hasGaps.toString()).joinToString(",")
+        }
+        return (listOf(header) + rows).joinToString("\n")
+    }
     private fun field(value: String): String =
         if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' })
             "\"" + value.replace("\"", "\"\"") + "\"" else value

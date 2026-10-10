@@ -10,21 +10,23 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
+import com.gymtracker.android.tracking.RunController
 
 enum class Tab(val label: String, val symbol: String) {
     HOME("Home", "⌂"), WORKOUT("Workout", "＋"), PLAN("Plan", "▤"),
-    HISTORY("History", "◷"), PROGRESS("Progress", "↗"), SETTINGS("Settings", "⚙")
+    HISTORY("History", "◷"), RUN("Run", "➜"), SETTINGS("Settings", "⚙")
 }
 data class TrackerUiState(
     val data: TrackerData = TrackerData(), val settings: Settings = Settings(),
     val session: WorkoutSession = WorkoutSession(), val tab: Tab = Tab.HOME,
     val loading: Boolean = true, val busy: Boolean = false, val error: String? = null,
     val completed: Workout? = null, val confirmFinish: Boolean = false,
-    val historyEditor: Boolean = false
+    val historyEditor: Boolean = false, val strengthProgress: Boolean = false
 )
 class TrackerViewModel(
     private val repository: TrackerRepository,
-    private val preferences: SettingsRepository
+    private val preferences: SettingsRepository,
+    private val runController: RunController? = null
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(TrackerUiState())
     val state = mutableState.asStateFlow()
@@ -49,7 +51,8 @@ class TrackerViewModel(
     private fun changeSession(transform: (WorkoutSession) -> WorkoutSession) {
         if (!state.value.busy) mutableState.update { it.copy(session = transform(it.session)) }
     }
-    fun selectTab(tab: Tab) { mutableState.update { it.copy(tab = tab) } }
+    fun selectTab(tab: Tab) { mutableState.update { it.copy(tab = tab, strengthProgress = false) } }
+    fun showStrengthProgress() { mutableState.update { it.copy(tab = Tab.HOME, strengthProgress = true) } }
     fun name(value: String) = changeSession { it.copy(name = value) }
     fun notes(value: String) = changeSession { it.copy(notes = value) }
     fun date(value: Instant) = changeSession { it.copy(date = value) }
@@ -150,7 +153,8 @@ class TrackerViewModel(
     fun deleteWorkout(workout: Workout) = action { repository.deleteWorkout(workout.id) }
     fun settings(settings: Settings) = action { preferences.update(settings) }
     fun deleteAllData() = action {
-        repository.deleteAllData()
+        if (runController != null) runController.clearForDelete { repository.deleteAllData() }
+        else repository.deleteAllData()
         liveSession = null
         mutableState.update { it.copy(session = WorkoutSession(), historyEditor = false) }
     }
@@ -166,11 +170,11 @@ class TrackerViewModel(
         }
     }
     companion object {
-        fun factory(repository: TrackerRepository, preferences: SettingsRepository) = object : ViewModelProvider.Factory {
+        fun factory(repository: TrackerRepository, preferences: SettingsRepository, runController: RunController? = null) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 require(modelClass.isAssignableFrom(TrackerViewModel::class.java))
-                return TrackerViewModel(repository, preferences) as T
+                return TrackerViewModel(repository, preferences, runController) as T
             }
         }
     }

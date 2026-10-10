@@ -60,9 +60,11 @@ interface TrackerDao {
     @Query("DELETE FROM exercises WHERE isPreset = 0") suspend fun clearCustomExercises()
 }
 @Database(
-    entities = [ExerciseEntity::class, WorkoutEntity::class, SetEntity::class, PlanEntity::class],
-    version = 1, exportSchema = true
+    entities = [ExerciseEntity::class, WorkoutEntity::class, SetEntity::class, PlanEntity::class,
+        RunEntity::class, RunPointEntity::class, RunSplitEntity::class],
+    version = 2, exportSchema = true
 )
 abstract class TrackerDatabase : RoomDatabase() {
     abstract fun dao(): TrackerDao
+    abstract fun runDao(): RunDao
 }

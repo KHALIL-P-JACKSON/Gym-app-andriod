@@ -14,13 +14,17 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
     private val rest = intPreferencesKey("restSeconds")
     private val awake = booleanPreferencesKey("keepAwake")
     private val discard = booleanPreferencesKey("confirmDiscard")
+    private val distance = stringPreferencesKey("distanceUnit")
+    private val runAudio = booleanPreferencesKey("runAudio")
     override val settings = store.data.catch { error ->
         if (error is IOException) emit(emptyPreferences()) else throw error
     }.map { prefs ->
         Settings(
             WeightUnit.entries.firstOrNull { it.name == prefs[unit] } ?: WeightUnit.LB,
             Appearance.entries.firstOrNull { it.name == prefs[appearance] } ?: Appearance.SYSTEM,
-            prefs[rest] ?: 0, prefs[awake] ?: false, prefs[discard] ?: true
+            prefs[rest] ?: 0, prefs[awake] ?: false, prefs[discard] ?: true,
+            DistanceUnit.entries.firstOrNull { it.name == prefs[distance] } ?: DistanceUnit.MILES,
+            prefs[runAudio] ?: false
         )
     }
     override suspend fun update(settings: Settings) {
@@ -30,6 +34,8 @@ class DataStoreSettingsRepository(private val store: DataStore<Preferences>) : S
             it[rest] = settings.restSeconds
             it[awake] = settings.keepAwake
             it[discard] = settings.confirmDiscard
+            it[distance] = settings.distanceUnit.name
+            it[runAudio] = settings.runAudio
         }
     }
 }

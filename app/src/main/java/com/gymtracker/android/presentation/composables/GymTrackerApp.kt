@@ -3,8 +3,6 @@ package com.gymtracker.android.presentation.composables
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,8 +18,10 @@ import com.gymtracker.android.presentation.composables.screens.*
 import com.gymtracker.android.presentation.composables.theme.GymTrackerTheme
 
 @Composable
-fun GymTrackerApp(model: TrackerViewModel, onExport: (String) -> Unit) {
+fun GymTrackerApp(model: TrackerViewModel, runModel: RunViewModel, onExport: (String) -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
+    val runState by runModel.state.collectAsStateWithLifecycle()
+    val runs by runModel.runs.collectAsStateWithLifecycle()
     var exportError by remember { mutableStateOf<String?>(null) }
     val view = LocalView.current
     val awake = state.settings.keepAwake && state.tab == Tab.WORKOUT
@@ -34,8 +34,9 @@ fun GymTrackerApp(model: TrackerViewModel, onExport: (String) -> Unit) {
     GymTrackerTheme(state.settings.appearance) {
         TrackerScaffold(state, model::selectTab) {
             if (state.loading) Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { CircularProgressIndicator() }
+            else if (state.strengthProgress) ProgressScreen(state.data, state.settings.unit)
             else when (state.tab) {
-                Tab.HOME -> HomeScreen(state.data, state.settings.unit) { model.selectTab(Tab.WORKOUT) }
+                Tab.HOME -> HomeScreen(state.data, state.settings.unit, onProgress = model::showStrengthProgress) { model.selectTab(Tab.WORKOUT) }
                 Tab.WORKOUT -> WorkoutScreen(state, WorkoutActions(
                     model::name, model::notes, model::date, model::addExercise, model::removeExercise,
                     model::addSet, model::removeSet, model::editSet, model::completeExercise,
@@ -44,13 +45,17 @@ fun GymTrackerApp(model: TrackerViewModel, onExport: (String) -> Unit) {
                 Tab.PLAN -> PlanScreen(state.data, state.busy, model::loadPlan, model::savePlan, model::deletePlan)
                 Tab.HISTORY -> HistoryScreen(
                     state.data, state.settings.unit, state.busy,
-                    { model.startHistoryWorkout() }, { model.startHistoryWorkout(it) }, model::deleteWorkout
+                    { model.startHistoryWorkout() }, { model.startHistoryWorkout(it) }, model::deleteWorkout,
+                    runs = runs, onDeleteRun = { runModel.delete(it.id) }
                 )
-                Tab.PROGRESS -> ProgressScreen(state.data, state.settings.unit)
+                Tab.RUN -> RunScreen(runState, state.settings, model::settings, runModel::start, runModel::end)
                 Tab.SETTINGS -> SettingsScreen(state.settings, state.busy, model::settings, {
                     try { onExport(CsvExporter.export(state.data)) }
                     catch (e: Exception) { exportError = e.message ?: "Couldn't export. Please try again." }
-                }, model::deleteAllData)
+                }, model::deleteAllData, onExportRuns = {
+                    try { onExport(CsvExporter.exportRuns(runs)) }
+                    catch (e: Exception) { exportError = e.message ?: "Couldn't export runs." }
+                })
             }
         }
         if (state.confirmFinish) AlertDialog(
@@ -72,14 +77,18 @@ fun GymTrackerApp(model: TrackerViewModel, onExport: (String) -> Unit) {
                 confirmButton = { TextButton(onClick = model::dismissCompleted) { Text("Done") } }
             )
         }
-        val error = state.error ?: exportError
+        runState.saved?.let { run ->
+            AlertDialog(onDismissRequest = runModel::dismissSaved, title = { Text("Run Saved") },
+                text = { RunDetails(run) }, confirmButton = { TextButton(onClick = runModel::dismissSaved) { Text("Done") } })
+        }
+        val error = state.error ?: exportError ?: runState.error
         if (error != null) AlertDialog(
-            onDismissRequest = { model.dismissError(); exportError = null },
+            onDismissRequest = { model.dismissError(); runModel.dismissError(); exportError = null },
             title = { Text("Something went wrong") }, text = { Text(error) },
-            confirmButton = { TextButton(onClick = { model.dismissError(); exportError = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { model.dismissError(); runModel.dismissError(); exportError = null }) { Text("OK") } }
         )
     }
-    BackHandler(enabled = state.tab != Tab.HOME && !state.historyEditor) { model.selectTab(Tab.HOME) }
+    BackHandler(enabled = (state.tab != Tab.HOME || state.strengthProgress) && !state.historyEditor) { model.selectTab(Tab.HOME) }
 }
 @Composable
 fun TrackerScaffold(state: TrackerUiState, onTab: (Tab) -> Unit, content: @Composable () -> Unit) {
@@ -87,22 +96,23 @@ fun TrackerScaffold(state: TrackerUiState, onTab: (Tab) -> Unit, content: @Compo
         topBar = {
             Surface {
                 Column(Modifier.fillMaxWidth().statusBarsPadding().padding(16.dp)) {
-                    Text(state.tab.label, style = MaterialTheme.typography.headlineSmall)
+                    Text(if (state.strengthProgress) "Strength Progress" else state.tab.label, style = MaterialTheme.typography.headlineSmall)
+                    if (state.strengthProgress) TextButton(onClick = { onTab(Tab.HOME) }) { Text("Back to Home") }
                     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
             }
         },
         bottomBar = {
             Surface(tonalElevation = 3.dp) {
-                LazyRow(
-                    Modifier.fillMaxWidth().navigationBarsPadding(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                Row(
+                    Modifier.fillMaxWidth().navigationBarsPadding()
                 ) {
-                    items(Tab.entries, key = { it.name }) { tab ->
+                    Tab.entries.forEach { tab ->
                         TextButton(
                             onClick = { onTab(tab) },
                             enabled = !state.busy && (!state.historyEditor || tab == Tab.WORKOUT),
-                            modifier = Modifier.widthIn(min = 64.dp)
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp)
                         ) {
                             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
                                 Text(tab.symbol)
@@ -119,5 +129,5 @@ fun TrackerScaffold(state: TrackerUiState, onTab: (Tab) -> Unit, content: @Compo
 @Preview(showBackground = true)
 @Composable
 private fun AppPreview() { GymTrackerTheme { TrackerScaffold(PreviewData.state, {}) {
-    HomeScreen(PreviewData.data, PreviewData.state.settings.unit, {})
+    HomeScreen(PreviewData.data, PreviewData.state.settings.unit, onStart = {})
 } } }

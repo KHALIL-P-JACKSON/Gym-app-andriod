@@ -2,6 +2,6 @@
     <style name="Theme.GymTracker" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:colorAccent">#38C778</item>
+        <item name="android:colorAccent">#AD1457</item>
     </style>
 </resources>

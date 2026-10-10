@@ -18,12 +18,12 @@ The source develop branch was older. Master includes Settings, CSV export and hi
 
 ## Deliberate platform differences
 - One small Android module with three packages, rather than separate Gradle modules or a DI framework.
-- Navigation uses a horizontal row of six tabs that scrolls on narrow devices.
-- Android Material date/input/dialog controls and a green theme approximate the source presentation.
+- Navigation uses a fixed row of six tabs. Run replaces Progress; strength progress is linked from Home.
+- Android Material date/input/dialog controls use a pink theme.
 - History editing reuses the workout editor. It preserves the active workout while editing/backfilling.
 - Notes/date fields are also available in the main workout editor.
 - CSV exports use Android's share sheet and a scoped cache FileProvider.
-- No cloud/backend, network permission, sync, Health integration, actual rest countdown or additional tracking features.
+- No cloud/backend, sync, Health integration or actual rest countdown. Android adds GPS runs, a location foreground service, and MapLibre/OpenFreeMap maps.
 - Source Swift/Xcode files and the original icon are archived unchanged under reference/ios.
 
 ## Data behavior
@@ -40,7 +40,7 @@ The source develop branch was older. Master includes Settings, CSV export and hi
 CI is the executable validation environment for this port. It runs domain tests, Android lint, APK compilation,
 a disk-based Room lifecycle test and a Compose workout flow on API 35.
 Preview functions exist for screens and reusable components; visual comparison with the iOS app remains a manual device task.
-The generated version-1 Room schema is committed and included in CI's android-build-reports artifact. Add a migration and retain previous schema versions when changing the database.
+Version 1 and 2 Room schemas are retained. The explicit 1→2 migration adds runs/routes/splits and preserves strength records; RunPersistenceTest validates upgrade and run lifecycle behavior.
 
 ## Release setup
 The release workflow produces unsigned APKs. Signing secrets and Play Console credentials are intentionally not fabricated.

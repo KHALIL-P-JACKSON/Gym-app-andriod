@@ -15,9 +15,5 @@ object Formatters {
     fun weight(pounds: Double, unit: WeightUnit) = "${number(unit.fromPounds(pounds))} ${unit.label}"
     fun date(instant: Instant): String =
         DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.systemDefault()).format(instant)
-    fun greeting(hour: Int = java.time.LocalTime.now().hour) = when (hour) {
-        in 5..11 -> "Good morning"
-        in 12..16 -> "Good afternoon"
-        else -> "Good evening"
-    }
+    fun greeting(): String = "Welcome back \nMy Love"
 }

@@ -16,13 +16,13 @@ import com.gymtracker.android.presentation.composables.previews.PreviewData
 import com.gymtracker.android.presentation.composables.theme.GymTrackerTheme
 
 @Composable
-fun HomeScreen(data: TrackerData, unit: WeightUnit, onStart: () -> Unit) {
+fun HomeScreen(data: TrackerData, unit: WeightUnit, onProgress: () -> Unit = {}, onStart: () -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(Formatters.greeting(), style = MaterialTheme.typography.headlineLarge)
-        Text("Let's keep it going.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("I love you, you can do this!", color = MaterialTheme.colorScheme.onSurfaceVariant)
         TrackerCard {
             Text("Ready for your workout?", style = MaterialTheme.typography.titleLarge)
             Text("Record your next session.")
@@ -48,6 +48,7 @@ fun HomeScreen(data: TrackerData, unit: WeightUnit, onStart: () -> Unit) {
         }
         TrackerCard {
             Text("Strength Progress", style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = onProgress) { Text("View Progress") }
             val featured = data.workouts.flatMap { it.sets }.groupBy { it.exerciseId }.maxByOrNull { it.value.size }?.key
             if (featured == null) Text("Log a few workouts to compare your top lifts.")
             else {
@@ -62,4 +63,4 @@ fun HomeScreen(data: TrackerData, unit: WeightUnit, onStart: () -> Unit) {
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun HomeScreenPreview() { GymTrackerTheme { HomeScreen(PreviewData.data, WeightUnit.LB, {}) } }
+private fun HomeScreenPreview() { GymTrackerTheme { HomeScreen(PreviewData.data, WeightUnit.LB, onStart = {}) } }

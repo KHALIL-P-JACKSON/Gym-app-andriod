@@ -15,7 +15,7 @@ import com.gymtracker.android.presentation.composables.theme.GymTrackerTheme
 @Composable
 fun SettingsScreen(
     settings: Settings, busy: Boolean, onChange: (Settings) -> Unit,
-    onExport: () -> Unit, onDeleteAll: () -> Unit
+    onExport: () -> Unit, onDeleteAll: () -> Unit, onExportRuns: () -> Unit = {}
 ) {
     var deleting by remember { mutableStateOf(false) }
     Column(
@@ -59,14 +59,15 @@ fun SettingsScreen(
         }
         TrackerCard {
             Text("Your Data", style = MaterialTheme.typography.titleMedium)
-            TextButton(onClick = onExport, enabled = !busy) { Text("Export CSV") }
+            TextButton(onClick = onExport, enabled = !busy) { Text("Export Workout CSV") }
+            TextButton(onClick = onExportRuns, enabled = !busy) { Text("Export Run CSV") }
             TextButton(onClick = { deleting = true }, enabled = !busy) { Text("Delete All Data", color = MaterialTheme.colorScheme.error) }
         }
-        Text("GymTracker 1.0.0 • Offline • Built with Kotlin and Jetpack Compose")
+        Text("GymTracker 1.0.0 • Runs saved on your phone • Maps need internet")
     }
     if (deleting) AlertDialog(
         onDismissRequest = { deleting = false }, title = { Text("Delete all data?") },
-        text = { Text("This removes every workout, custom exercise and plan edit. Preset exercises and plans will be restored.") },
+        text = { Text("This ends any active run and removes every run, route, workout, custom exercise and plan edit. Preset exercises and plans will be restored.") },
         confirmButton = { TextButton(onClick = { onDeleteAll(); deleting = false }, enabled = !busy) { Text("Delete All") } },
         dismissButton = { TextButton(onClick = { deleting = false }) { Text("Cancel") } }
     )

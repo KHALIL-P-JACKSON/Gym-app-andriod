@@ -19,7 +19,9 @@ data class Settings(
     val appearance: Appearance = Appearance.SYSTEM,
     val restSeconds: Int = 0,
     val keepAwake: Boolean = false,
-    val confirmDiscard: Boolean = true
+    val confirmDiscard: Boolean = true,
+    val distanceUnit: DistanceUnit = DistanceUnit.MILES,
+    val runAudio: Boolean = false
 )
 data class Exercise(
     val id: String = UUID.randomUUID().toString(),

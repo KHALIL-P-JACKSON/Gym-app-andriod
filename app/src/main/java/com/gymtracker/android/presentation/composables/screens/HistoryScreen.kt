@@ -16,26 +16,56 @@ import com.gymtracker.android.presentation.Formatters
 import com.gymtracker.android.presentation.composables.components.*
 import com.gymtracker.android.presentation.composables.previews.PreviewData
 import com.gymtracker.android.presentation.composables.theme.GymTrackerTheme
+import com.gymtracker.android.domain.service.RunCalculator
+import java.time.Instant
+
+private data class HistoryEntry(val date: Long, val workout: Workout? = null, val run: RunRecord? = null) {
+    val key get() = if (workout != null) "workout-${workout.id}" else "run-${run!!.id}"
+}
 
 @Composable
 fun HistoryScreen(
     data: TrackerData, unit: WeightUnit, busy: Boolean,
-    onAdd: () -> Unit, onEdit: (Workout) -> Unit, onDelete: (Workout) -> Unit
+    onAdd: () -> Unit, onEdit: (Workout) -> Unit, onDelete: (Workout) -> Unit,
+    runs: List<RunRecord> = emptyList(), onDeleteRun: (RunRecord) -> Unit = {}
 ) {
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedRunId by rememberSaveable { mutableStateOf<String?>(null) }
+    var deleteRunId by rememberSaveable { mutableStateOf<String?>(null) }
+    var filter by rememberSaveable { mutableStateOf("All") }
+    val entries = (if (filter != "Runs") data.workouts.map { HistoryEntry(it.date.toEpochMilli(), workout = it) } else emptyList()) +
+        (if (filter != "Workouts") runs.map { HistoryEntry(it.startedAt, run = it) } else emptyList())
     LazyColumn(
         Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { Button(onClick = onAdd, enabled = !busy) { Text("+ Log a Past Workout") } }
-        if (data.workouts.isEmpty()) item { EmptyState("No workouts yet", "Completed workouts will appear here.") }
-        items(data.workouts.sortedByDescending { it.date }, key = { it.id }) { workout ->
-            TrackerCard {
-                Text(workout.name, style = MaterialTheme.typography.titleLarge)
-                Text(Formatters.date(workout.date))
-                Text("${workout.exerciseCount} exercises • ${workout.sets.size} sets • ${Formatters.weight(workout.volume, unit)} volume")
-                TextButton(onClick = { selectedId = workout.id }) { Text("View Details") }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("All", "Workouts", "Runs").forEach { label ->
+                    FilterChip(selected = filter == label, onClick = { filter = label }, label = { Text(label) })
+                }
+            }
+        }
+        if (entries.isEmpty()) item { EmptyState("No ${if (filter == "All") "activities" else filter.lowercase()} yet", "Saved workouts and runs will appear here.") }
+        items(entries.sortedByDescending { it.date }, key = { it.key }) { entry ->
+            entry.workout?.let { workout ->
+                TrackerCard {
+                    Text(workout.name, style = MaterialTheme.typography.titleLarge)
+                    Text(Formatters.date(workout.date))
+                    Text("${workout.exerciseCount} exercises • ${workout.sets.size} sets • ${Formatters.weight(workout.volume, unit)} volume")
+                    TextButton(onClick = { selectedId = workout.id }) { Text("View Details") }
+                }
+            }
+            entry.run?.let { run ->
+                TrackerCard {
+                    Text("Run", style = MaterialTheme.typography.titleLarge)
+                    Text(Formatters.date(Instant.ofEpochMilli(run.startedAt)))
+                    Text("${RunCalculator.distance(run.distanceMeters, run.unit)} • ${RunCalculator.duration(run.elapsedMillis)}")
+                    Text("Average pace: ${RunCalculator.pace(run.elapsedMillis, run.distanceMeters, run.unit)}")
+                    TextButton(onClick = { selectedRunId = run.id }) { Text("View Run") }
+                }
             }
         }
     }
@@ -59,6 +89,18 @@ fun HistoryScreen(
             confirmButton = { TextButton(onClick = { onDelete(workout); deleteId = null }, enabled = !busy) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { deleteId = null }) { Text("Cancel") } }
         )
+    }
+    runs.find { it.id == selectedRunId }?.let { run ->
+        AlertDialog(onDismissRequest = { selectedRunId = null }, title = { Text("Run Details") },
+            text = { RunDetails(run) },
+            confirmButton = { TextButton(onClick = { selectedRunId = null }) { Text("Close") } },
+            dismissButton = { TextButton(onClick = { deleteRunId = run.id; selectedRunId = null }, enabled = !busy) { Text("Delete") } })
+    }
+    runs.find { it.id == deleteRunId }?.let { run ->
+        AlertDialog(onDismissRequest = { deleteRunId = null }, title = { Text("Delete run?") },
+            text = { Text("This run, its route, and its splits will be removed.") },
+            confirmButton = { TextButton(onClick = { onDeleteRun(run); deleteRunId = null }, enabled = !busy) { Text("Delete") } },
+            dismissButton = { TextButton(onClick = { deleteRunId = null }) { Text("Cancel") } })
     }
 }
 @Composable

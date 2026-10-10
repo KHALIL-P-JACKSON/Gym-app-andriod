@@ -1,6 +1,6 @@
 # GymTracker for Android
 
-Native, single-user, offline workout tracker built with Kotlin, Jetpack Compose, Room and DataStore.
+Native, single-user workout and run tracker built with Kotlin, Jetpack Compose, Room and DataStore. Records are saved locally; maps use the internet.
 Android port of [Gym-App](https://github.com/KHALIL-P-JACKSON/Gym-App), based on its master commit
 `6f1a03cfb22133d1ce343ebc2a3c95af30358d5e`.
 
@@ -15,25 +15,26 @@ The guide also includes a runnable Kotlin example using the actual domain servic
 2. Use JDK 17; install Android SDK 35.
 3. Sync Gradle, then run the app on Android 8.0 / API 26 or newer.
 
-The standard Gradle 8.11.1 wrapper is committed:
+The standard Gradle 8.13 wrapper is committed:
 ```sh
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ./gradlew connectedDebugAndroidTest
 python3 scripts/check_architecture.py
 ```
-The second command needs a running emulator/device. Initial build downloads dependencies; the installed app needs no network.
+The second command needs a running emulator/device. Initial build downloads dependencies. Workout features and run recording work offline; loading new map areas needs internet.
 
 ## Screens
 - **Home:** greeting, start workout, recent workout, streak, total volume and featured strength comparison.
 - **Workout:** search, grouped preset/custom exercises, previous sets, weight/reps entry, add/remove rows, Complete/Edit locks, notes, date and inline Finish Workout. Incomplete sets are dropped only after confirmation when enabled.
 - **Plan:** six preset splits, custom plans, edit names/exercises, delete custom plans and load into the workout.
-- **History:** newest first, details, delete, log a past workout and edit its name/date/notes/exercises/sets. Cancel restores your ongoing workout.
-- **Progress:** exercise selection, workout-best comparisons and estimated Epley 1RM chart with accessible dated values.
+- **History:** All/Workouts/Runs filters, newest first, workout editing and run details with saved routes and splits. Confirmed deletion removes associated records.
+- **Run:** precise GPS position, pink route, Start Run/End Run, stopwatch, miles/km, live/average pace, splits, optional distance goal and spoken updates. A location foreground service continues with the screen locked. Force-stop/reboot can interrupt recording; unfinished sessions can be recovered with gaps identified.
+- **Strength Progress (from Home):** exercise selection, workout-best comparisons and estimated Epley 1RM chart with accessible dated values.
 - **Settings:** lb/kg, system/light/dark, default rest preference, keep awake, discard confirmation, CSV share and confirmed delete-all/reseed.
 
 The exact 37 exercises and six splits are seeded using stable IDs. Existing preset plan edits survive relaunch/seeding.
 Weights are persisted in pounds, regardless of display unit. Like iOS, a valid set needs positive finite weight and positive reps; zero-weight bodyweight entry is not supported.
-Drafts live in the ViewModel across configuration changes; only finished workouts are saved to disk.
+Strength drafts live in the ViewModel across configuration changes. Active runs checkpoint to disk; completed runs include their route and splits.
 The rest setting is a preference, as in the source; there is no running timer.
 
 ## Three layers
@@ -49,9 +50,10 @@ app/src/main/java/com/gymtracker/android/
     Formatters.kt             Shared formatting
     composables/
       components/             Reusable cards, entry rows, picker, date selector and chart
-      screens/                Home, Workout, Plan, History, Progress, Settings
-      theme/                  Green design system and light/dark colors
+      screens/                Home, Workout, Plan, History, Run, strength Progress, Settings
+      theme/                  Pink design system and light/dark colors
       previews/               Pure fixtures; no database/ViewModel required
+  tracking/                   Android location source, run controller and foreground service
 ```
 
 Data implements domain interfaces; presentation depends on domain. The Application/Activity compose concrete dependencies.
@@ -59,7 +61,9 @@ One Gradle app module and manual constructor injection keep debugging simple. Al
 
 Room transactions replace edited set lists atomically. Deleting a workout cascades to its sets.
 Exercise foreign keys prevent removal of referenced history. Delete-all removes workouts before custom exercises and restores all default plans.
-The database starts at version 1. The generated version-1 schema is committed in `app/schemas`; CI also uploads schemas with reports. Add an explicit migration and commit the new generated schema before changing stored fields.
+The database is version 2, with an explicit version 1→2 migration that preserves strength data and adds run/route/split tables. Both schemas are in `app/schemas`. Retain old schemas and add migrations for future changes.
+
+Run maps use MapLibre Native with OpenFreeMap, with no map API key or billing setup. Attribution remains visible. Map failures do not stop recording. Settings exports separate workout and run-summary CSVs; run CSV uses meters and seconds, with pace per the recorded unit. Route coordinates stay in the app. See [Run plan](docs/RUN_TAB_PLAN.md) for design and validation cases.
 
 ## Branches and automation
 - `master`: Android baseline.
@@ -85,7 +89,9 @@ Android uses Material controls rather than pixel-identical SwiftUI controls; the
 - Load a plan and create/edit/delete a custom plan.
 - Change units with an open draft; stored weights/history remain equivalent.
 - Backfill a workout date, edit its name/notes/sets, then delete it.
-- Check Progress after two workouts; estimated 1RM is clearly labeled.
+- Open View Progress on Home after two workouts; estimated 1RM is clearly labeled.
+- Start a run, lock the screen, move outdoors, reopen and End Run; inspect route/time/distance/splits in History.
+- Check miles/km, distance goals, spoken updates, GPS loss, denied precise location and map connectivity loss.
 - Share CSV; confirm pounds and escaped names.
 - Change theme; inspect previews on small/large screens.
 - Enable keep-awake on Workout; switch tabs and verify normal screen timeout returns.
